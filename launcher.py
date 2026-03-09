@@ -2,10 +2,6 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import threading, os, sys
 from reporting.main_logic import validate_excel
-import matplotlib
-os.environ["MPLCONFIGDIR"] = os.path.join(os.getcwd(), "mpl_cache")
-matplotlib.rcParams['font.family'] = 'DejaVu Sans'
-matplotlib.use("Agg")
 
 def resource_path(relative_path):
     try:

@@ -1,5 +1,3 @@
-import pandas as pd
-import re
 from validators.patient import validate_patient
 from validators.doctor import validate_doctor
 from visits.visit_tracker import store_latest_visit, check_patient_visits_valid, visit_transpose
@@ -14,6 +12,8 @@ def validate_excel(
     info_file,
     save_path
 ):
+    import pandas as pd
+    import re
     req_issues = []
     opt_issues = []
     latest_visit, earliest_visit = {}, {}
