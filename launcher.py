@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
-import threading, os, sys
-from reporting.main_logic import validate_excel
+import threading
+import os
+import sys
 
 def resource_path(relative_path):
     try:
@@ -141,7 +142,7 @@ class ReportApp:
 
         try:
             self.update_status("Generating report...", "blue")
-
+            from reporting.main_logic import validate_excel
             validate_excel(visit_files, previous_file, info_file, save_path)
 
             self.update_status("Report generated successfully.", "green")
