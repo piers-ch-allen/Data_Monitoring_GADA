@@ -207,7 +207,7 @@ def calc_follow_up_avg(
     if len(visit_group) == 0 or visit_group[0].empty:
         return pd.DataFrame(columns=[
             "Visit Date 1", "Visit Date 2", "Visit Date 3", "Visit Date 4",
-            "days_v1_to_v2", "days_v2_to_v3", "days_v3_to_v4"
+            "mean_days_v1_to_v2", "mean_days_v2_to_v3", "mean_days_v3_to_v4"
         ])
 
         # Reset index so patient ID is a column
@@ -232,31 +232,31 @@ def calc_follow_up_avg(
     collated_visit.set_index("index", inplace=True)
 
     # Calculate days between visits
-    collated_visit["days_v1_to_v2"] = (collated_visit["Visit Date 2"] - collated_visit["Visit Date 1"]).dt.days
-    collated_visit["days_v2_to_v3"] = (collated_visit["Visit Date 3"] - collated_visit["Visit Date 2"]).dt.days
-    collated_visit["days_v3_to_v4"] = (collated_visit["Visit Date 4"] - collated_visit["Visit Date 3"]).dt.days
+    collated_visit["mean_days_v1_to_v2"] = (collated_visit["Visit Date 2"] - collated_visit["Visit Date 1"]).dt.days
+    collated_visit["mean_days_v2_to_v3"] = (collated_visit["Visit Date 3"] - collated_visit["Visit Date 2"]).dt.days
+    collated_visit["mean_days_v3_to_v4"] = (collated_visit["Visit Date 4"] - collated_visit["Visit Date 3"]).dt.days
 
     # Calculate the avg follow-up time between visits
-    avg_follow_v2_data = collated_visit["days_v1_to_v2"].to_list()
+    avg_follow_v2_data = collated_visit["mean_days_v1_to_v2"].to_list()
     avg_follow_v2 = [x for x in avg_follow_v2_data if not (isinstance(x, float) and math.isnan(x))]
     if len(avg_follow_v2) > 0:
         avg_follow_v2 = statistics.mean(avg_follow_v2)
-    avg_follow_v3_data = collated_visit["days_v2_to_v3"].to_list()
+    avg_follow_v3_data = collated_visit["mean_days_v2_to_v3"].to_list()
     avg_follow_v3 = [x for x in avg_follow_v3_data if not (isinstance(x, float) and math.isnan(x))]
     if len(avg_follow_v3) > 0:
         avg_follow_v3 = statistics.mean(avg_follow_v3)
-    avg_follow_v4_data = collated_visit["days_v3_to_v4"].to_list()
+    avg_follow_v4_data = collated_visit["mean_days_v3_to_v4"].to_list()
     avg_follow_v4 = [x for x in avg_follow_v4_data if not (isinstance(x, float) and math.isnan(x))]
     if len(avg_follow_v4) > 0:
         avg_follow_v4 = statistics.mean(avg_follow_v4)
 
     # Calculate the avg follow-up time per center
-    collated_clinic_visit = collated_visit[["Clinic", "days_v1_to_v2", "days_v2_to_v3", "days_v3_to_v4"]]
+    collated_clinic_visit = collated_visit[["Clinic", "mean_days_v1_to_v2", "mean_days_v2_to_v3", "mean_days_v3_to_v4"]]
     collated_clinic_visit = collated_clinic_visit.dropna(
-        subset=["days_v1_to_v2", "days_v2_to_v3", "days_v3_to_v4"],
+        subset=["mean_days_v1_to_v2", "mean_days_v2_to_v3", "mean_days_v3_to_v4"],
         how="all"
     )
-    followup_cols = ["days_v1_to_v2", "days_v2_to_v3", "days_v3_to_v4"]
+    followup_cols = ["mean_days_v1_to_v2", "mean_days_v2_to_v3", "mean_days_v3_to_v4"]
 
     clinic_summary = (
         collated_clinic_visit

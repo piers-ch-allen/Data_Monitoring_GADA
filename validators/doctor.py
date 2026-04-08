@@ -137,6 +137,7 @@ def validate_doctor(
                 therapies[13]: ["LOTstart2", "LOTend2", "LOTcont2", "LOTEffic2", "LOTSideEf2", "LOTPron2", "LOName2"]
             }
             therapy_counter = 0
+            top_therapy_counter = 0
             for val in therapies:
                 if row[val] == 1:
                     temp_issues = therapy_check(row, therapies_dict.get(val))
@@ -145,14 +146,15 @@ def validate_doctor(
             if therapy_counter == 0 and pd.isna(row["nosyst"]):
                 add_issue(required_doctor_issues, {
                     "ID": row["Subject"],
-                    "Issue": "Sensitivity options not chosen",
-                    "Column": "Sen...."
+                    "Issue": "No information on systematic therapies given",
+                    "Column": "nosyst"
                 })
             elif not(pd.isna(row["nosyst"])):
                 add_issue(required_doctor_issues, binary_check(row, "nosyst"))
             therapy_values = ["klass1", "klass2", "klass3", "klass4", "PIbhb", "TAbhb", "UVja"]
             for val in therapy_values:
                 if not(pd.isna(row[val])):
+                    top_therapy_counter += 1
                     add_issue(required_doctor_issues, binary_check(row, val))
                     if val == "TAbhb" and row[val] == 1:
                         add_issue(required_doctor_issues, non_empty_check(row, "TAbhbPerc"))
@@ -165,6 +167,15 @@ def validate_doctor(
                                 "Column": "UV...."
                             })
                         add_issue(required_doctor_issues, non_empty_check(row, "UKkudaver"))
+            if therapy_counter == 0 and pd.isna(row["noTopT"]):
+                add_issue(required_doctor_issues, {
+                    "ID": row["Subject"],
+                    "Issue": "No information on topical therapies given",
+                    "Column": "noTopT"
+                })
+            elif not (pd.isna(row["noTopT"])):
+                add_issue(required_doctor_issues, binary_check(row, "noTopT"))
+
 
             # Page 6
             req_systemic_keys = [
@@ -436,14 +447,39 @@ def validate_doctor(
                     })
 
         # Page 6 inclusion and page 3 follow-up
-        corticosteroids_therapies = ["COClass1", "COClass2", "COClass3", "COClass4", "Pime"]
-        for val in corticosteroids_therapies:
-            if not (pd.isna(row[val])) and row[val] != 1:
-                add_issue(optional_doctor_issues, {
+        systemic_therapies = [
+            "AbroDosis", "BADosis", "DUDosis", "LEDosis", "TRDosis", "UPDosis", "BioOthDosis",
+            "AZproduct", "CLproduct", "COproduct", "COIntproduct", "MTproduct", "MYproduct", "OthNonBioproduct"
+        ]
+        systemic_treat_val = 0
+        for val in systemic_therapies:
+            systemic_treat_val += 1
+        if systemic_treat_val == 0 and pd.isna(row["noCurSyst"]):
+                add_issue(required_doctor_issues, {
                     "ID": row["Subject"],
-                    "Issue": "Corticosteroids values inconsistent",
-                    "Column": "COC...."
+                    "Issue": "No information on current systemic therapies given",
+                    "Column": "noCurSyst"
                 })
+
+        corticosteroids_therapies = ["COClass1", "COClass2", "COClass3", "COClass4", "Pime", "TAC", "UV", "ReactTreat", "ProTreat"]
+        treatment_val = 0
+        for val in corticosteroids_therapies:
+            if not(pd.isna(row[val])):
+                if row[val] != 1:
+                    add_issue(optional_doctor_issues, {
+                        "ID": row["Subject"],
+                        "Issue": "current treatment values inconsistent",
+                        "Column": "COC...."
+                    })
+                else:
+                    treatment_val += 1
+        if treatment_val == 0 and pd.isna(row["noCurTop"]):
+                add_issue(required_doctor_issues, {
+                    "ID": row["Subject"],
+                    "Issue": "No information on current topical therapies given",
+                    "Column": "noCurTop"
+                })
+
         if not (pd.isna(row["TAC"])):
             if row["TAC"] != 1:
                 add_issue(optional_doctor_issues, {

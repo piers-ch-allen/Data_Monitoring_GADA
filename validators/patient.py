@@ -17,7 +17,7 @@ def validate_patient(
         if visit_type == 0:
             # Initial visit
             add_issue(required_patient_issues, valid_val_range_check(row, "YOB", 1925, pd.Timestamp.now().year))
-            add_issue(required_patient_issues, valid_val_range_check(row, "ethnic", 1, 9))
+            add_issue(required_patient_issues, valid_val_range_check(row, "ethnic", 0, 9))
             if row["ethnic"] == 9 and pd.isna(row["ethnicOth"]):
                 add_issue(required_patient_issues, {
                     "ID": row["Subject"],
@@ -78,8 +78,8 @@ def validate_patient(
                             "Column": "PregNone"
                         })
                 add_issue(required_patient_issues, valid_val_range_check(row, "ChildDel", 0, 2))
-                add_issue(optional_patient_issues, valid_val_range_check(row, "ChildOrd", 0, 4))
-                if row["ChildOrd"] == 4:
+                add_issue(optional_patient_issues, valid_val_range_check(row, "ChildOrd", 0, 5))
+                if row["ChildOrd"] == 5:
                     add_issue(optional_patient_issues, non_empty_check(row, "ChildOrdOth"))
                 add_issue(optional_patient_issues, valid_val_range_check(row, "ChildFed", 1, 3))
                 if not pd.isna(row["ChildAgeEat"]):
@@ -115,24 +115,37 @@ def validate_patient(
             })
         add_issue(required_patient_issues, valid_val_range_check(row, "height", 1, 300))
         add_issue(required_patient_issues,valid_val_range_check(row, "weight", 1, 200))
-        if row["ageVisit"] > 18:
+        if row["ageVisit"] > 17:
             add_issue(required_patient_issues, non_empty_check(row, "BMI"))
-            add_issue(optional_patient_issues, valid_val_range_check(row, "Educ", 0, 10))
+            if pd.isna(row["Educ"]):
+                add_issue(optional_patient_issues, valid_val_range_check(row, "Educ", 0, 10))
+            else:
+                add_issue(optional_patient_issues, {
+                    "ID": row["Subject"],
+                    "Issue": "No education information was entered",
+                    "Column": "Education"
+                })
             add_issue(required_patient_issues, valid_val_range_check(row, "SmokeS", 0, 5))
             add_issue(optional_patient_issues, binary_check(row, "EmpSta"))
             if row["EmpSta"] == 1:
-                add_issue(optional_patient_issues, binary_check(row, "EmpStaJ"))
+                add_issue(optional_patient_issues, valid_val_range_check(row, "EmpStaJ",1,4))
         else:
             add_issue(optional_patient_issues, valid_val_range_check(row, "EducChild", 0, 10))
             add_issue(optional_patient_issues, valid_val_range_check(row, "EducMoth", 0, 10))
             add_issue(optional_patient_issues, valid_val_range_check(row, "EducFath", 0, 10))
+            if pd.isna(row["EducChild"]) and pd.isna(row["EducMoth"]) and pd.isna(row["EducFath"]):
+                add_issue(optional_patient_issues, {
+                    "ID": row["Subject"],
+                    "Issue": "No education information was entered",
+                    "Column": "Education"
+                })
             add_issue(required_patient_issues, binary_check(row, "SmokeSec"))
             add_issue(optional_patient_issues, binary_check(row, "EmpStaMoth"))
             if row["EmpSta"] == 1:
-                add_issue(optional_patient_issues, binary_check(row, "EmpStaJMoth"))
+                add_issue(optional_patient_issues, valid_val_range_check(row, "EmpStaJMoth",1,4))
             add_issue(optional_patient_issues, binary_check(row, "EmpStaFath"))
             if row["EmpSta"] == 1:
-                add_issue(optional_patient_issues, binary_check(row, "EmpStaJFath"))
+                add_issue(optional_patient_issues, valid_val_range_check(row, "EmpStaJFath",1,4))
         if 12 < row["ageVisit"] < 18:
             add_issue(required_patient_issues, valid_val_range_check(row, "SmokeUnder", 0, 5))
         add_issue(optional_patient_issues, non_empty_check(row, "resid"))
@@ -140,7 +153,13 @@ def validate_patient(
         add_issue(required_patient_issues, binary_check(row, "LiveGen"))
 
         if not pd.isna(row["House"]):
-            add_issue(optional_patient_issues, valid_val_range_check(row, "House", 1, 20))
+            add_issue(optional_patient_issues, valid_val_range_check(row, "House", 1, 10))
+        else:
+            add_issue(optional_patient_issues, {
+                "ID": row["Subject"],
+                "Issue": "Household size not enterered",
+                "Column": "House"
+            })
         if not pd.isna(row["IncFam"]):
             add_issue(optional_patient_issues, valid_val_range_check(row, "IncFam", 0, 20))
         fam_check: list[str] = ["Fami1", "Fami2", "Fami3", "Fami4", "Fami5", "Fami6"]
@@ -249,7 +268,11 @@ def validate_patient(
             })
             return required_patient_issues, optional_patient_issues
         add_issue(required_patient_issues, binary_check(row, "BodyMapGADA-biological sex"))
-        if not(row["BodyMapGADA-age"] == "adult" or row["BodyMapGADA-age"] == "child1to4" or row["BodyMapGADA-age"] == "child5to9" or row["BodyMapGADA-age"] == "teen"):
+        if not(row["BodyMapGADA-age"] == "adult"
+                or row["BodyMapGADA-age"] == "baby"
+                or row["BodyMapGADA-age"] == "child1to4"
+                or row["BodyMapGADA-age"] == "child5to9"
+                or row["BodyMapGADA-age"] == "teen"):
             add_issue(required_patient_issues, {
                 "ID": row["Subject"],
                 "Issue": "body map definition issue",
@@ -337,9 +360,9 @@ def validate_patient(
                     "Column": "dl7AqiCh"
                 })
             elif non_empty_check(row, "dl7AqiCh"):
-                add_issue(required_patient_issues, valid_val_range_check(row, "dl7BqiCh", 0, 3))
+                add_issue(required_patient_issues, valid_val_range_check(row, "dl7BqiCh", 0, 4))
             else:
-                add_issue(required_patient_issues, valid_val_range_check(row, "dl7AqiCh", 0, 3))
+                add_issue(required_patient_issues, valid_val_range_check(row, "dl7AqiCh", 0, 4))
             add_issue(required_patient_issues, valid_val_range_check(row, "CDLQI", 0, 30))
         elif 0 < row["ageVisit"] < 4 and not pd.isna(row["dl1qiInf"]):
             dlqi_inf = ["dl1qiInf", "dl2qiInf", "dl3qiInf", "dl4qiInf", "dl5qiInf", "dl6qiInf", "dl7qiInf", "dl8qiInf", "dl9qiInf", "dl10qiInf"]
