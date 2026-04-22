@@ -17,6 +17,7 @@ def validate_doctor(
     optional_doctor_issues = []
 
     for _ , row in df.iterrows():
+        comp_date = pd.to_datetime("04/14/26", format="%m/%d/%y")
         if visit_type == 1:
             add_issue(required_doctor_issues, valid_val_range_check(row, "visitInfo", 1, 2))
             add_issue(required_doctor_issues, binary_check(row, "changeCom"))
@@ -167,14 +168,15 @@ def validate_doctor(
                                 "Column": "UV...."
                             })
                         add_issue(required_doctor_issues, non_empty_check(row, "UKkudaver"))
-            if therapy_counter == 0 and pd.isna(row["noTopT"]):
-                add_issue(required_doctor_issues, {
-                    "ID": row["Subject"],
-                    "Issue": "No information on topical therapies given",
-                    "Column": "noTopT"
-                })
-            elif not (pd.isna(row["noTopT"])):
-                add_issue(required_doctor_issues, binary_check(row, "noTopT"))
+            if pd.to_datetime(row["dateVisit"], format="%m/%d/%y") < comp_date:
+                if therapy_counter == 0 and pd.isna(row["noTopT"]):
+                    add_issue(required_doctor_issues, {
+                        "ID": row["Subject"],
+                        "Issue": "No information on topical therapies given",
+                        "Column": "noTopT"
+                    })
+                elif not (pd.isna(row["noTopT"])):
+                    add_issue(required_doctor_issues, binary_check(row, "noTopT"))
 
 
             # Page 6
@@ -454,12 +456,13 @@ def validate_doctor(
         systemic_treat_val = 0
         for val in systemic_therapies:
             systemic_treat_val += 1
-        if systemic_treat_val == 0 and pd.isna(row["noCurSyst"]):
-                add_issue(required_doctor_issues, {
-                    "ID": row["Subject"],
-                    "Issue": "No information on current systemic therapies given",
-                    "Column": "noCurSyst"
-                })
+        if pd.to_datetime(row["dateVisit"], format="%m/%d/%y") < comp_date:
+            if systemic_treat_val == 0 and pd.isna(row["noCurSyst"]):
+                    add_issue(required_doctor_issues, {
+                        "ID": row["Subject"],
+                        "Issue": "No information on current systemic therapies given",
+                        "Column": "noCurSyst"
+                    })
 
         corticosteroids_therapies = ["COClass1", "COClass2", "COClass3", "COClass4", "Pime", "TAC", "UV", "ReactTreat", "ProTreat"]
         treatment_val = 0
@@ -473,12 +476,13 @@ def validate_doctor(
                     })
                 else:
                     treatment_val += 1
-        if treatment_val == 0 and pd.isna(row["noCurTop"]):
-                add_issue(required_doctor_issues, {
-                    "ID": row["Subject"],
-                    "Issue": "No information on current topical therapies given",
-                    "Column": "noCurTop"
-                })
+        if pd.to_datetime(row["dateVisit"], format="%m/%d/%y") < comp_date:
+            if treatment_val == 0 and pd.isna(row["noCurTop"]):
+                    add_issue(required_doctor_issues, {
+                        "ID": row["Subject"],
+                        "Issue": "No information on current topical therapies given",
+                        "Column": "noCurTop"
+                    })
 
         if not (pd.isna(row["TAC"])):
             if row["TAC"] != 1:

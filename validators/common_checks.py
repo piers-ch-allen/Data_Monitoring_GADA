@@ -183,7 +183,7 @@ def process_group_systemic(
                     if not (pd.isna(row[temp[11]])):
                         add_issue(issues, non_empty_check(row, temp[11]))
                     if "BioOth" in key or "OthNon" in key:
-                        add_issue(issues, non_empty_check(row, 12))
+                        add_issue(issues, non_empty_check(row, temp[12]))
                 else:
                     add_issue(issues, binary_check(row, temp[3]))
 

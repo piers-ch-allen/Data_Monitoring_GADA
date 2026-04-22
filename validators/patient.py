@@ -98,7 +98,7 @@ def validate_patient(
 
         # Page 1:
         if row["Dropout"] == 1 and (
-                pd.isna(row["Dropout Status"]) or pd.isna(row["Dropout Comment"]) or pd.isna(row["Dropout Date"])):
+                pd.isna(row["Dropout Status"]) or pd.isna(row["Dropout Date"])):
             required_patient_issues.append({
                 "ID": row["Subject"],
                 "Issue": "Missing Values",
