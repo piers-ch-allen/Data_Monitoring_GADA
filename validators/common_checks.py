@@ -178,11 +178,18 @@ def process_group_systemic(
                 if  row[temp[3]] == 0:
                     add_issue(issues, valid_date_check(row, temp[4]))
                     add_issue(issues, valid_val_range_check(row, temp[5], 0, 4))
+                    count = 0
                     for val in range(6, 10):
-                        add_issue(issues, binary_check(row, temp[val]))
-                    if not (pd.isna(row[temp[11]])):
-                        add_issue(issues, non_empty_check(row, temp[11]))
-                    if "BioOth" in key or "OthNon" in key:
+                        if not (pd.isna(row[temp[val]])):
+                            count = 1
+                            add_issue(issues, binary_check(row, temp[val]))
+                    if count == 0 and pd.isna(row[temp[11]]):
+                        add_issue(issues, {
+                            "ID": row["Subject"],
+                            "Issue": "reason for discontinuing not given",
+                            "Column": key + " " + temp[6]
+                        })
+                    elif count == 0 and not (pd.isna(row[temp[11]])):
                         add_issue(issues, non_empty_check(row, temp[12]))
                 else:
                     add_issue(issues, binary_check(row, temp[3]))

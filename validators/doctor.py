@@ -272,13 +272,19 @@ def validate_doctor(
             opt_systemic_temp_issue = process_group_systemic(row, opt_systemic_keys, opt_systemic_keys_info)
             optional_doctor_issues.extend(opt_systemic_temp_issue)
 
-        if row["Dropout"] == 1 and (
-            pd.isna(row["Dropout Status"]) or pd.isna(row["Dropout Comment"]) or pd.isna(row["Dropout Date"])):
-                        required_doctor_issues.append({
-                            "ID": row["Subject"],
-                            "Issue": "Missing Values",
-                            "Column": "Dropout"
-                    })
+        if row["Dropout"] == 1:
+            if pd.isna(row["Dropout Status"]):
+                required_doctor_issues.append({
+                    "ID": row["Subject"],
+                    "Issue": "Missing Values",
+                    "Column": "Dropout Status"
+                })
+            if pd.isna(row["Dropout Date"]):
+                required_doctor_issues.append({
+                    "ID": row["Subject"],
+                    "Issue": "Missing Values",
+                    "Column": "Dropout Date"
+                })
         add_issue(required_doctor_issues, valid_date_check(row, "dateVisit"))
 
         # Page 2 inclusion and page 1 follow-up

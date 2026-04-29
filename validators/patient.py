@@ -97,13 +97,19 @@ def validate_patient(
 
 
         # Page 1:
-        if row["Dropout"] == 1 and (
-                pd.isna(row["Dropout Status"]) or pd.isna(row["Dropout Date"])):
-            required_patient_issues.append({
-                "ID": row["Subject"],
-                "Issue": "Missing Values",
-                "Column": "Dropout"
-            })
+        if row["Dropout"] == 1:
+            if pd.isna(row["Dropout Status"]):
+                required_patient_issues.append({
+                    "ID": row["Subject"],
+                    "Issue": "Missing Values",
+                    "Column": "Dropout Status"
+                })
+            if pd.isna(row["Dropout Date"]):
+                required_patient_issues.append({
+                    "ID": row["Subject"],
+                    "Issue": "Missing Values",
+                    "Column": "Dropout Date"
+                })
         add_issue(required_patient_issues, valid_date_check(row, "dateVisit"))
         add_issue(required_patient_issues, valid_val_range_check(row, "ageVisit", 0, 120))
         add_issue(required_patient_issues, valid_val_range_check(row, "ageVisit", 0, 120))
@@ -118,13 +124,13 @@ def validate_patient(
         if row["ageVisit"] > 17:
             add_issue(required_patient_issues, non_empty_check(row, "BMI"))
             if pd.isna(row["Educ"]):
-                add_issue(optional_patient_issues, valid_val_range_check(row, "Educ", 0, 10))
-            else:
                 add_issue(optional_patient_issues, {
                     "ID": row["Subject"],
                     "Issue": "No education information was entered",
                     "Column": "Education"
                 })
+            else:
+                add_issue(optional_patient_issues, valid_val_range_check(row, "Educ", 0, 10))
             add_issue(required_patient_issues, valid_val_range_check(row, "SmokeS", 0, 5))
             add_issue(optional_patient_issues, binary_check(row, "EmpSta"))
             if row["EmpSta"] == 1:
@@ -185,7 +191,7 @@ def validate_patient(
                 add_issue(optional_patient_issues, {
                     "ID": row["Subject"],
                     "Issue": "Productivity Days not answered",
-                    "Column": "hospIn3MDay"
+                    "Column": "schoolProd"
                 })
             add_issue(optional_patient_issues, valid_val_range_check(row, "schoolProd", -1, 10))
         else:
@@ -261,12 +267,17 @@ def validate_patient(
         ]
         if non_empty_check(row, "BodyMapGADA-biological sex"):
             error_message = "Incomplete on page 4 check rest of patient"
-            add_issue(required_patient_issues, {
-                "ID": row["Subject"],
-                "Issue": error_message,
-                "Column": "Page 4"
-            })
-            return required_patient_issues, optional_patient_issues
+            count = 0
+            for val in body_map_fields:
+                if not pd.isna(row[val]):
+                        count += 1
+            if count >= 0:
+                add_issue(required_patient_issues, {
+                    "ID": row["Subject"],
+                    "Issue": error_message,
+                    "Column": "Page 4"
+                })
+                return required_patient_issues, optional_patient_issues
         add_issue(required_patient_issues, binary_check(row, "BodyMapGADA-biological sex"))
         if not(row["BodyMapGADA-age"] == "adult"
                 or row["BodyMapGADA-age"] == "baby"
